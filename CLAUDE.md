@@ -97,7 +97,7 @@ length of year, number of moons, average temperature, 2 short fun facts.
 - **Hover** over a planet → it gets a highlight (glow / brighter outline) and its
   **name label** appears above it.
 - **Select** a planet (see controls) → switch to Focus mode.
-- **Drag** (grip and move hand, or mouse drag) → **orbit the camera** around the Sun
+- **Drag** (grip on empty space and move hand, or mouse drag) → **orbit the camera** around the Sun
   (left/right = rotate around, up/down = change tilt, tilt clamped between ~5° and ~85°).
   Camera movement must be smoothed (no jitter).
 
@@ -121,11 +121,15 @@ Use the Developer Toolkit's **KinectRegion + interaction stream** (hand pointer)
   hand pointer's position (`HandPointer.GetPosition(viewport)`). Make the hit area
   generous (small planets like Mercury must still be easy to hit — use an invisible
   larger hit sphere around each planet).
-- **Select** = **press** (push hand toward the screen) **or** keep the hand still over the
-  planet for **2 seconds** (dwell) — show a circular progress ring around the cursor
-  while dwelling. Both work; dwell is the reliable fallback.
-- **Drag** = **grip** (close fist), move hand, **release** (open hand).
-- Only the **primary user's primary hand** controls the app. Ignore other people walking by.
+- **Select** = **grip** (close fist) with the cursor on a planet — this is the main gesture
+  and flies the camera to that planet. **Press** (push hand toward the screen) **or** keeping
+  the hand still over the planet for **2 seconds** (dwell) also work — show a circular
+  progress ring around the cursor while dwelling. Dwell is the reliable fallback, because
+  the Kinect can miss a fist.
+- **Drag** = **grip** on empty space, move hand, **release** (open hand) → orbit the camera.
+  In Focus mode, a grip anywhere except the Back button spins the planet.
+- Only the **primary user's primary hand** controls the app (the raised hand, so the right
+  hand works and left-handed classmates can use theirs). Ignore other people walking by.
 - **Status indicator** (small, bottom corner): "Kinect connected", "No Kinect",
   "Step in front of the camera", "Tracking". Also show a big friendly prompt when no
   user is tracked: "Stand in front of the camera and raise your hand".
@@ -146,7 +150,7 @@ care which input is used.
 
 ## Start screen
 Shown on launch over the slowly rotating overview: project title, 3 big pictograms with
-short text explaining the gestures (hover, push/hold to select, grip to drag), the
+short text explaining the gestures (hover, fist on a planet to zoom in, fist on empty space to drag), the
 texture credit, and "Raise your hand to start" (or click). Disappears when a user is
 tracked or the mouse is clicked.
 
@@ -202,8 +206,9 @@ select → fly-to Focus mode, info panel from planets.json, spin planet, Back bu
 keys, fullscreen toggle.
 
 **Phase 4 — Kinect input**
-KinectInput with KinectRegion hand pointer, hover via hit testing, press + dwell select
-with progress ring, grip-drag, primary user only, status indicator, unplug/replug handling.
+KinectInput with KinectRegion hand pointer, hover via hit testing, grip on a planet to select
+(press + dwell with progress ring as fallbacks), grip on empty space to drag, primary user only,
+status indicator, unplug/replug handling.
 Add sensitivity/smoothing settings to the config. The student will test standing 2–3 m away.
 
 **Phase 5 — Polish**

@@ -150,19 +150,30 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="AppLog.cs" />
+    <Compile Include="Camera\CameraController.cs" />
+    <Compile Include="Config\SimulationConfig.cs" />
     <Compile Include="Input\KinectInput.cs" />
+    <Compile Include="Model\CelestialBody.cs" />
+    <Compile Include="Scene\BodyVisual.cs" />
+    <Compile Include="Scene\SceneBuilder.cs" />
+    <Compile Include="Scene\TextureLoader.cs" />
   </ItemGroup>
 
   <!-- Folders that will be filled in later phases (see CLAUDE.md). -->
   <ItemGroup>
-    <Folder Include="Camera\" />
-    <Folder Include="Config\" />
     <Folder Include="Interaction\" />
-    <Folder Include="Model\" />
-    <Folder Include="Scene\" />
     <Folder Include="Simulation\" />
     <Folder Include="UI\" />
-    <Folder Include="Assets\Textures\" />
+  </ItemGroup>
+
+  <!-- Planet pictures: copied next to the .exe. Files that are not there yet are simply skipped. -->
+  <ItemGroup>
+    <Content Include="Assets\Textures\*.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\Textures\*.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>

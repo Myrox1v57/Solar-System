@@ -9,15 +9,14 @@
         WindowStartupLocation="CenterScreen"
         Background="Black">
     <Grid>
-        <!-- Phase 0: only a title and the Kinect status. The 3D scene comes in Phase 1. -->
-        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-            <TextBlock Text="Kinect Solar System"
-                       FontSize="64" FontWeight="Light" Foreground="White"
-                       HorizontalAlignment="Center" />
-            <TextBlock x:Name="KinectStatusText"
-                       Text="Looking for Kinect..."
-                       FontSize="40" Foreground="Orange"
-                       HorizontalAlignment="Center" Margin="0,32,0,0" />
-        </StackPanel>
+        <!-- The 3D scene. SceneBuilder fills it when the window opens. -->
+        <Viewport3D x:Name="SceneViewport" />
+
+        <!-- Small Kinect status in the corner. The full status indicator comes in Phase 4. -->
+        <TextBlock x:Name="KinectStatusText"
+                   Text="Looking for Kinect..."
+                   FontSize="20" Foreground="Orange"
+                   HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                   Margin="0,0,24,16" />
     </Grid>
 </Window>

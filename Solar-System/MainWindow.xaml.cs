@@ -1,21 +1,26 @@
 ﻿using System;
 using System.Windows;
 using System.Windows.Media;
+using Solar_System.Camera;
 using Solar_System.Input;
+using Solar_System.Scene;
 
 namespace Solar_System
 {
     /// <summary>
     /// The main window. Wires all parts of the app together.
-    /// Phase 0: shows whether a Kinect is connected.
+    /// Phase 1: shows the static 3D scene and the Kinect status.
     /// </summary>
     public partial class MainWindow : Window
     {
         private readonly KinectInput kinect = new KinectInput();
+        private readonly CameraController cameraController = new CameraController();
 
         public MainWindow()
         {
             InitializeComponent();
+
+            SceneViewport.Camera = cameraController.Camera;
 
             kinect.StatusChanged += OnKinectStatusChanged;
             Loaded += OnLoaded;
@@ -24,6 +29,8 @@ namespace Solar_System
 
         private void OnLoaded(object sender, RoutedEventArgs e)
         {
+            SceneBuilder.Build(SceneViewport);
+
             try
             {
                 kinect.Start();
