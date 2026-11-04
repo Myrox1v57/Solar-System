@@ -80,13 +80,18 @@ namespace Solar_System.Scene
 
             var builder = new MeshBuilder(false, true);
             builder.AddSphere(new Point3D(0, 0, 0), SimulationConfig.SkyboxRadius,
-                SimulationConfig.SphereSegmentsAround, SimulationConfig.SphereSegmentsPoleToPole);
+                SimulationConfig.SkyboxSegmentsAround, SimulationConfig.SkyboxSegmentsPoleToPole);
+
+            // Nothing is behind the stars, so one emissive layer is enough. This fills the whole
+            // screen every frame, so drawing it only once makes a real difference to the speed.
+            var material = new EmissiveMaterial(stars) { Color = SimulationConfig.SkyboxTint };
+            material.Freeze();
 
             // We look at the sphere from inside, so the picture goes on its back side.
             var model = new GeometryModel3D
             {
                 Geometry = builder.ToMesh(true),
-                BackMaterial = CreateSelfLitMaterial(stars, SimulationConfig.SkyboxTint)
+                BackMaterial = material
             };
             return new ModelVisual3D { Content = model };
         }

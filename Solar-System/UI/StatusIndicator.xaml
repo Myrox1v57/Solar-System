@@ -5,8 +5,8 @@
     <!-- A colored dot and a short text. -->
     <Border Background="#99070B16" CornerRadius="14" Padding="14,6">
         <StackPanel Orientation="Horizontal">
-            <Ellipse x:Name="Dot" Width="16" Height="16" Fill="Orange" VerticalAlignment="Center" />
-            <TextBlock x:Name="MessageText" Margin="10,0,0,0" FontSize="20" Foreground="White"
+            <Ellipse x:Name="Dot" Width="18" Height="18" Fill="Orange" VerticalAlignment="Center" />
+            <TextBlock x:Name="MessageText" Margin="10,0,0,0" FontSize="24" Foreground="White"
                        Text="Търсене на Kinect..." VerticalAlignment="Center" />
         </StackPanel>
     </Border>

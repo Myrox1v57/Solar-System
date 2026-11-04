@@ -68,25 +68,30 @@
             </Canvas>
 
             <!-- Shown while nobody controls the app with a hand. -->
-            <TextBlock x:Name="RaiseHandPrompt" Grid.ColumnSpan="2"
-                       Text="Застанете пред камерата и вдигнете ръка"
-                       FontSize="38" FontWeight="SemiBold" Foreground="White" IsHitTestVisible="False"
-                       HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,70"
-                       Visibility="Collapsed">
-                <TextBlock.Effect>
-                    <DropShadowEffect Color="Black" BlurRadius="10" ShadowDepth="0" Opacity="1" />
-                </TextBlock.Effect>
+            <Grid Grid.ColumnSpan="2" IsHitTestVisible="False">
                 <!-- Hidden in Focus mode (the Back button is only there then), or the panel would cut it off. -->
-                <TextBlock.Style>
-                    <Style TargetType="TextBlock">
+                <Grid.Style>
+                    <Style TargetType="Grid">
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding Visibility, ElementName=BackButton}" Value="Visible">
                                 <Setter Property="Opacity" Value="0" />
                             </DataTrigger>
                         </Style.Triggers>
                     </Style>
-                </TextBlock.Style>
-            </TextBlock>
+                </Grid.Style>
+                <!-- A plain dark background, not a glow effect: effects over the moving 3D scene are slow. -->
+                <Border x:Name="RaiseHandPrompt" Background="#B0070B16" CornerRadius="18" Padding="28,10"
+                        HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,64"
+                        Visibility="Collapsed" Opacity="0">
+                    <TextBlock Text="Застанете пред камерата и вдигнете ръка"
+                               FontSize="42" FontWeight="SemiBold" Foreground="White" />
+                </Border>
+            </Grid>
+
+            <!-- The texture license (CC BY) requires this credit. -->
+            <TextBlock Grid.ColumnSpan="2" Text="Текстури на планетите: Solar System Scope (CC BY 4.0)"
+                       FontSize="18" Foreground="#9FB4D0" IsHitTestVisible="False"
+                       HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,20,16" />
 
             <!-- Clicks pass through the panel, so it never blocks dragging the planet. -->
             <ui:InfoPanel x:Name="PlanetInfoPanel" Grid.Column="1" IsHitTestVisible="False" />
@@ -96,7 +101,7 @@
                     Style="{StaticResource BackButtonStyle}" Focusable="False"
                     Width="240" Height="120" Margin="28"
                     HorizontalAlignment="Left" VerticalAlignment="Top"
-                    Visibility="Collapsed" Click="OnBackClicked" />
+                    Visibility="Collapsed" Opacity="0" Click="OnBackClicked" />
 
             <ui:StatusIndicator x:Name="KinectStatus" Grid.ColumnSpan="2"
                                 HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="20,0,0,14" />

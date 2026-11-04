@@ -4,6 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Media.Media3D;
 using System.Windows.Shapes;
 using HelixToolkit.Wpf;
+using Solar_System.Config;
 using Solar_System.Scene;
 
 namespace Solar_System.UI
@@ -20,38 +21,50 @@ namespace Solar_System.UI
         private readonly Viewport3D viewport;
         private readonly Ellipse ring;
         private readonly TextBlock label;
-        private BodyVisual body;
+
+        private BodyVisual body;  // kept after hiding, so the marker keeps following while it fades out
+        private bool isShown;
 
         public HoverMarker(Viewport3D viewport, Ellipse ring, TextBlock label)
         {
             this.viewport = viewport;
             this.ring = ring;
             this.label = label;
-            Show(null);
+
+            ring.Visibility = Visibility.Collapsed;
+            label.Visibility = Visibility.Collapsed;
         }
 
         /// <summary>Mark this body, or nothing if it is null.</summary>
         public void Show(BodyVisual newBody)
         {
-            if (newBody == body && newBody != null)
+            if (newBody == null)
+            {
+                if (isShown)
+                {
+                    isShown = false;
+                    Fade.Out(ring, SimulationConfig.HoverFadeSeconds);
+                    Fade.Out(label, SimulationConfig.HoverFadeSeconds);
+                }
+                return;
+            }
+
+            if (isShown && newBody == body)
             {
                 return;
             }
 
+            isShown = true;
             body = newBody;
-            Visibility visibility = body != null ? Visibility.Visible : Visibility.Collapsed;
-            ring.Visibility = visibility;
-            label.Visibility = visibility;
-            if (body != null)
-            {
-                label.Text = body.Body.DisplayName;
-            }
+            label.Text = body.Body.DisplayName;
+            Fade.In(ring, SimulationConfig.HoverFadeSeconds);
+            Fade.In(label, SimulationConfig.HoverFadeSeconds);
         }
 
         /// <summary>Call every frame: planets move, so the marker has to follow.</summary>
         public void Update()
         {
-            if (body == null)
+            if (body == null || ring.Visibility != Visibility.Visible)
             {
                 return;
             }

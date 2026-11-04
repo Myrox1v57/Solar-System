@@ -30,10 +30,18 @@ namespace Solar_System.Config
         public const double CameraFarPlane = 3000;
 
         // ---- Detail of the 3D shapes ----
+        /// <summary>
+        /// Smooth edges look better but cost speed. On a weak graphics chip, false gives a steady
+        /// 60 frames per second in fullscreen, but planet edges and orbit lines look a bit stepped.
+        /// </summary>
+        public static readonly bool SmoothEdges = true;
         /// <summary>Slices around a sphere. More = rounder, but slower.</summary>
         public const int SphereSegmentsAround = 96;
         /// <summary>Slices from pole to pole.</summary>
         public const int SphereSegmentsPoleToPole = 48;
+        /// <summary>The sky is smooth anyway and has no lighting, so it needs fewer slices.</summary>
+        public const int SkyboxSegmentsAround = 48;
+        public const int SkyboxSegmentsPoleToPole = 24;
         public const int OrbitLineSegments = 256;
         public const int RingSegments = 128;
 
@@ -147,6 +155,11 @@ namespace Solar_System.Config
         /// <summary>How quickly a spin from a drag fades. Lower = the planet keeps turning for longer.</summary>
         public const double SpinMomentumFade = 1.5;
         public const double InfoPanelSlideSeconds = 0.4;
+
+        // ---- Fades ----
+        public const double HoverFadeSeconds = 0.15;
+        public const double ButtonFadeSeconds = 0.3;
+        public const double PromptFadeSeconds = 0.4;
 
         /// <summary>
         /// All bodies. A parent must come before the bodies that circle it.

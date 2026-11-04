@@ -28,6 +28,8 @@ namespace Solar_System
         private List<BodyVisual> bodies = new List<BodyVisual>();
         private InteractionController interaction;
         private HandCursor handCursor;
+        private bool isPromptShown;
+        private TimeSpan lastRenderingTime;
 
         private bool isFullscreen;
         private WindowState stateBeforeFullscreen;
@@ -38,6 +40,11 @@ namespace Solar_System
 
             kinect = new KinectInput(KinectArea, InputSurface);
             SceneViewport.Camera = cameraController.Camera;
+
+            if (!SimulationConfig.SmoothEdges)
+            {
+                RenderOptions.SetEdgeMode(SceneViewport, EdgeMode.Aliased);
+            }
 
             kinect.StatusChanged += OnKinectStatusChanged;
             Loaded += OnLoaded;
@@ -85,6 +92,14 @@ namespace Solar_System
 
         private void OnRendering(object sender, EventArgs e)
         {
+            // WPF can call this more than once per frame. Doing the work twice would be a waste.
+            TimeSpan renderingTime = ((RenderingEventArgs)e).RenderingTime;
+            if (renderingTime == lastRenderingTime)
+            {
+                return;
+            }
+            lastRenderingTime = renderingTime;
+
             double realSeconds = frameTimer.Elapsed.TotalSeconds;
             frameTimer.Restart();
 
@@ -98,6 +113,7 @@ namespace Solar_System
             double frameSeconds = Math.Min(realSeconds, SimulationConfig.MaxFrameSeconds);
             kinect.Update(frameSeconds);
             handCursor.Show(kinect.HandPosition, kinect.IsGripping);
+            UpdateRaiseHandPrompt();
             interaction.Update(frameSeconds);
         }
 
@@ -166,6 +182,25 @@ namespace Solar_System
             }
         }
 
+        /// <summary>Shows the big prompt while nobody controls the app with a hand.</summary>
+        private void UpdateRaiseHandPrompt()
+        {
+            bool show = kinect.State == KinectState.WaitingForUser || kinect.State == KinectState.UserSeen;
+
+            if (show != isPromptShown)
+            {
+                isPromptShown = show;
+                if (show)
+                {
+                    Fade.In(RaiseHandPrompt, SimulationConfig.PromptFadeSeconds);
+                }
+                else
+                {
+                    Fade.Out(RaiseHandPrompt, SimulationConfig.PromptFadeSeconds);
+                }
+            }
+        }
+
         private void OnKinectStatusChanged(object sender, EventArgs e)
         {
             ShowKinectStatus();
@@ -174,9 +209,6 @@ namespace Solar_System
         private void ShowKinectStatus()
         {
             KinectStatus.Show(kinect.State, kinect.StatusMessage);
-
-            bool waitingForHand = kinect.State == KinectState.WaitingForUser || kinect.State == KinectState.UserSeen;
-            RaiseHandPrompt.Visibility = waitingForHand ? Visibility.Visible : Visibility.Collapsed;
         }
     }
 }

@@ -77,7 +77,7 @@ namespace Solar_System.Interaction
             camera.FlyToOverview();
             clock.IsSlowMotion = false;
             infoPanel.SlideOut();
-            backButton.Visibility = Visibility.Collapsed;
+            Fade.Out(backButton, SimulationConfig.ButtonFadeSeconds);
         }
 
         public void ResetCamera()
@@ -201,7 +201,7 @@ namespace Solar_System.Interaction
             camera.FlyTo(body);
             clock.IsSlowMotion = true;
             infoPanel.SlideIn(body.Body);
-            backButton.Visibility = Visibility.Visible;
+            Fade.In(backButton, SimulationConfig.ButtonFadeSeconds);
         }
 
         private void OnDragMoved(Vector movement)

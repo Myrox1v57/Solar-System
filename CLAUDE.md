@@ -73,8 +73,8 @@ Free textures from **Solar System Scope** (solarsystemscope.com/textures, CC BY 
 2k_neptune.jpg, 2k_stars_milky_way.jpg`
 If a file is missing, show the planet in a solid fallback color instead of crashing,
 and log which file was missing.
-Show the credit "Planet textures: Solar System Scope (CC BY 4.0)" on the start screen
-and in the README.
+Show the credit "Planet textures: Solar System Scope (CC BY 4.0)" in a small line on screen
+and in the README. The license requires it, so don't remove it.
 
 ## Planet information
 Stored in `Assets/planets.json` (one entry per body, including Sun and Moon) — not
@@ -151,10 +151,8 @@ Hover/Move, Select, DragStart, DragDelta, DragEnd) so the rest of the app doesn'
 care which input is used.
 
 ## Start screen
-Shown on launch over the slowly rotating overview: project title, 3 big pictograms with
-short text explaining the gestures (hover, fist on a planet to zoom in, fist on empty space to drag), the
-texture credit, and "Raise your hand to start" (or click). Disappears when a user is
-tracked or the mouse is clicked.
+None. The student removed it: the app opens directly on the Overview, and the presenter
+explains the gestures.
 
 ## Architecture (keep files small and focused)
 ```
@@ -172,7 +170,6 @@ KinectSolarSystem/
   Input/KinectInput.cs               – Kinect implementation (sensor, KinectRegion, grip/press, dwell)
   Interaction/InteractionController.cs – hover/select/drag state machine, Overview↔Focus modes
   UI/InfoPanel.xaml(.cs)             – info panel
-  UI/StartScreen.xaml(.cs)           – start screen
   UI/StatusIndicator.xaml(.cs)       – Kinect status
   Assets/Textures/*.jpg|png, Assets/planets.json
 ```
@@ -214,7 +211,7 @@ status indicator, unplug/replug handling.
 Add sensitivity/smoothing settings to the config. The student will test standing 2–3 m away.
 
 **Phase 5 — Polish**
-Start screen, smooth transitions everywhere, hover sound/click sound optional (ask
+Smooth transitions everywhere, hover sound/click sound optional (ask
 first), readable text sizes on a projector, performance check (steady frame rate),
 README with how to run, controls, and credits.
 
