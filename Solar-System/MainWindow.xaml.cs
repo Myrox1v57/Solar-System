@@ -27,6 +27,7 @@ namespace Solar_System
         private readonly Stopwatch frameTimer = new Stopwatch();
         private List<BodyVisual> bodies = new List<BodyVisual>();
         private InteractionController interaction;
+        private HandCursor handCursor;
 
         private bool isFullscreen;
         private WindowState stateBeforeFullscreen;
@@ -49,6 +50,7 @@ namespace Solar_System
             bodies = SceneBuilder.Build(SceneViewport);
             PlanetDataLoader.AttachInfo(bodies.ConvertAll(visual => visual.Body));
 
+            handCursor = new HandCursor(HandSymbol);
             interaction = new InteractionController(
                 SceneViewport, bodies, cameraController, clock,
                 new IPointerInput[] { new MouseInput(InputSurface), kinect },
@@ -93,8 +95,10 @@ namespace Solar_System
                 body.UpdateMotion(clock.Time);
             }
 
-            kinect.Update();
-            interaction.Update(Math.Min(realSeconds, SimulationConfig.MaxFrameSeconds));
+            double frameSeconds = Math.Min(realSeconds, SimulationConfig.MaxFrameSeconds);
+            kinect.Update(frameSeconds);
+            handCursor.Show(kinect.HandPosition, kinect.IsGripping);
+            interaction.Update(frameSeconds);
         }
 
         private void OnBackClicked(object sender, RoutedEventArgs e)

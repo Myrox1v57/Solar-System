@@ -33,8 +33,9 @@ namespace Solar_System.Input
         private bool isEnabled = true;
         private bool listeningForChanges;
 
-        private bool hasPosition;  // false until the hand has been seen
-        private Point position;    // smoothed hand position
+        private bool hasPosition;     // false until the hand has been seen
+        private Point targetPosition; // where the hand says the cursor should be
+        private Point position;       // where the cursor is now: it smoothly chases the target
         private bool isGripping;
 
         public KinectInput(KinectRegion region, FrameworkElement surface)
@@ -74,6 +75,18 @@ namespace Solar_System.Input
         public bool UsesDwell
         {
             get { return true; }
+        }
+
+        /// <summary>Where to draw the hand cursor. Null when no hand is raised.</summary>
+        public Point? HandPosition
+        {
+            get { return hasPosition ? position : (Point?)null; }
+        }
+
+        /// <summary>True while the hand is closed and held.</summary>
+        public bool IsGripping
+        {
+            get { return isGripping; }
         }
 
         /// <summary>Raised (on the UI thread) whenever State or StatusMessage changes.</summary>
@@ -121,8 +134,8 @@ namespace Solar_System.Input
             }
         }
 
-        /// <summary>Call once per frame: notices when the hand or the person goes away.</summary>
-        public void Update()
+        /// <summary>Call once per frame: moves the cursor and notices when the hand or the person goes away.</summary>
+        public void Update(double seconds)
         {
             if (sensor == null)
             {
@@ -141,6 +154,11 @@ namespace Solar_System.Input
             {
                 hasPosition = false;
                 Left?.Invoke();
+            }
+
+            if (hasPosition)
+            {
+                MoveCursor(seconds);
             }
 
             if (handRaised)
@@ -171,16 +189,41 @@ namespace Solar_System.Input
             }
 
             Point rawPosition = hand.GetPosition(surface);
-            Point oldPosition = hasPosition ? position : rawPosition;
+            targetPosition = ToCursorPosition(rawPosition);
 
-            // Follow the hand only part of the way each time, which removes the shaking.
-            position = oldPosition + (rawPosition - oldPosition) * SimulationConfig.KinectPointerSmoothing;
-            hasPosition = true;
+            if (!hasPosition)
+            {
+                position = targetPosition; // a new hand starts right where it is
+                hasPosition = true;
+            }
 
             // While pushing, the Toolkit pulls the cursor toward this point. Keep it right
             // under the hand, or the cursor would slide away to the middle of the window.
             KinectRegion.SetPressTargetPoint(surface,
                 new Point(rawPosition.X / surface.ActualWidth, rawPosition.Y / surface.ActualHeight));
+
+            e.Handled = true;
+        }
+
+        /// <summary>With a lower sensitivity, moving the hand away from the middle moves the cursor less.</summary>
+        private Point ToCursorPosition(Point handPosition)
+        {
+            var middle = new Point(surface.ActualWidth / 2, surface.ActualHeight / 2);
+            Point moved = middle + (handPosition - middle) * SimulationConfig.KinectPointerSensitivity;
+
+            return new Point(Math.Max(0, Math.Min(surface.ActualWidth, moved.X)),
+                             Math.Max(0, Math.Min(surface.ActualHeight, moved.Y)));
+        }
+
+        /// <summary>
+        /// The Kinect sends about 30 updates per second. Chasing the latest one on every
+        /// screen frame keeps the cursor smooth and removes the shaking of the hand.
+        /// </summary>
+        private void MoveCursor(double seconds)
+        {
+            Point oldPosition = position;
+            double chase = 1 - Math.Exp(-SimulationConfig.KinectPointerSmoothing * seconds);
+            position = oldPosition + (targetPosition - oldPosition) * chase;
 
             Moved?.Invoke(position);
 
@@ -188,8 +231,6 @@ namespace Solar_System.Input
             {
                 DragMoved?.Invoke((position - oldPosition) * SimulationConfig.KinectDragSensitivity);
             }
-
-            e.Handled = true;
         }
 
         private void OnGrip(object sender, HandPointerEventArgs e)

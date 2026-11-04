@@ -183,6 +183,7 @@
     <Compile Include="Scene\TextureLoader.cs" />
     <Compile Include="Simulation\SimulationClock.cs" />
     <Compile Include="UI\DwellRing.cs" />
+    <Compile Include="UI\HandCursor.cs" />
     <Compile Include="UI\HoverMarker.cs" />
   </ItemGroup>
 

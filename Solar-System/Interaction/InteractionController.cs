@@ -104,6 +104,10 @@ namespace Solar_System.Interaction
             hoverMarker.Update();
             clock.IsHoverSlowdown = hovered != null;
 
+            // The XAML lights up the button when this is set. A mouse lights it up by itself.
+            bool handOverBack = pointerUsesDwell && pointer.HasValue && IsOverBackButton(pointer.Value);
+            backButton.Tag = handOverBack ? "hand" : null;
+
             UpdateDwell(hovered, seconds);
         }
 

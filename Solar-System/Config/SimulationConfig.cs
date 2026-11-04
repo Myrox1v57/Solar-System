@@ -99,10 +99,14 @@ namespace Solar_System.Config
         public const double HoverSimulationSpeed = 0.15;
 
         // ---- Kinect hand ----
-        /// <summary>How much of the way the cursor moves toward the hand each update. Lower = calmer but slower.</summary>
-        public const double KinectPointerSmoothing = 0.6;
-        /// <summary>Hand drags are multiplied by this. Higher = less arm movement is needed.</summary>
-        public const double KinectDragSensitivity = 1.5;
+        /// <summary>Size of the hand cursor on screen.</summary>
+        public const double KinectCursorSize = 52;
+        /// <summary>How far the cursor moves compared to the hand. 1 = fully, lower = less sensitive.</summary>
+        public const double KinectPointerSensitivity = 0.8;
+        /// <summary>How quickly the cursor catches up with the hand. Lower = calmer but slower.</summary>
+        public const double KinectPointerSmoothing = 10;
+        /// <summary>Hand drags are multiplied by this. Lower = more arm movement is needed.</summary>
+        public const double KinectDragSensitivity = 1.0;
         /// <summary>How long to hold the hand still to select.</summary>
         public const double DwellSeconds = 2;
         /// <summary>The hand may wander this far during those seconds.</summary>
