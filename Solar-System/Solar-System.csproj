@@ -83,6 +83,7 @@
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Net.Http" />
+    <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Xaml">
       <RequiredTargetFramework>4.0</RequiredTargetFramework>
     </Reference>
@@ -141,6 +142,14 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Page Include="UI\InfoPanel.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Compile Include="UI\InfoPanel.xaml.cs">
+      <DependentUpon>InfoPanel.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
@@ -152,22 +161,26 @@
     <Compile Include="AppLog.cs" />
     <Compile Include="Camera\CameraController.cs" />
     <Compile Include="Config\SimulationConfig.cs" />
+    <Compile Include="Input\IPointerInput.cs" />
     <Compile Include="Input\KinectInput.cs" />
+    <Compile Include="Input\MouseInput.cs" />
+    <Compile Include="Interaction\InteractionController.cs" />
     <Compile Include="Model\CelestialBody.cs" />
+    <Compile Include="Model\PlanetDataLoader.cs" />
+    <Compile Include="Model\PlanetInfo.cs" />
+    <Compile Include="Scene\BodyPicker.cs" />
     <Compile Include="Scene\BodyVisual.cs" />
     <Compile Include="Scene\SceneBuilder.cs" />
     <Compile Include="Scene\TextureLoader.cs" />
     <Compile Include="Simulation\SimulationClock.cs" />
+    <Compile Include="UI\HoverMarker.cs" />
   </ItemGroup>
 
-  <!-- Folders that will be filled in later phases (see CLAUDE.md). -->
+  <!-- Planet text and pictures: copied next to the .exe. Pictures that are not there yet are simply skipped. -->
   <ItemGroup>
-    <Folder Include="Interaction\" />
-    <Folder Include="UI\" />
-  </ItemGroup>
-
-  <!-- Planet pictures: copied next to the .exe. Files that are not there yet are simply skipped. -->
-  <ItemGroup>
+    <Content Include="Assets\planets.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Assets\Textures\*.jpg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

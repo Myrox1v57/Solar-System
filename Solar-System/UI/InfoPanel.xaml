@@ -1,0 +1,92 @@
+<UserControl x:Class="Solar_System.UI.InfoPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Visibility="Hidden">
+    <UserControl.RenderTransform>
+        <TranslateTransform x:Name="Slide" />
+    </UserControl.RenderTransform>
+
+    <UserControl.Resources>
+        <!-- Small grey title of a value, and the big white value itself. -->
+        <Style x:Key="Caption" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="26" />
+            <Setter Property="Foreground" Value="#9FB4D0" />
+        </Style>
+        <Style x:Key="Value" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="36" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="LineHeight" Value="42" />
+        </Style>
+        <Style x:Key="Fact" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="33" />
+            <Setter Property="Foreground" Value="#E8EEF7" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="LineHeight" Value="42" />
+            <Setter Property="Margin" Value="0,14,0,0" />
+        </Style>
+    </UserControl.Resources>
+
+    <Border Background="#F2070B16" CornerRadius="28,0,0,28">
+        <!-- Designed at this fixed size. The Viewbox scales it, so the text grows with the screen. -->
+        <Viewbox Stretch="Uniform" VerticalAlignment="Center">
+            <Grid Width="680" Height="1000" Margin="36,0,28,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <TextBlock x:Name="NameText" Grid.Row="0" Margin="0,30,0,0"
+                           FontSize="84" FontWeight="Bold" Foreground="White" />
+                <TextBlock x:Name="TypeText" Grid.Row="1" Margin="0,0,0,28"
+                           FontSize="36" Foreground="#FFC56B" TextWrapping="Wrap" />
+
+                <Grid Grid.Row="2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,20,22">
+                        <TextBlock Style="{StaticResource Caption}" Text="Диаметър" />
+                        <TextBlock x:Name="DiameterText" Style="{StaticResource Value}" />
+                    </StackPanel>
+                    <StackPanel Grid.Row="0" Grid.Column="1" Margin="0,0,0,22">
+                        <TextBlock Style="{StaticResource Caption}" Text="Разстояние до Слънцето" />
+                        <TextBlock x:Name="DistanceText" Style="{StaticResource Value}" />
+                    </StackPanel>
+                    <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,20,22">
+                        <TextBlock Style="{StaticResource Caption}" Text="Ден" />
+                        <TextBlock x:Name="DayText" Style="{StaticResource Value}" />
+                    </StackPanel>
+                    <StackPanel Grid.Row="1" Grid.Column="1" Margin="0,0,0,22">
+                        <TextBlock Style="{StaticResource Caption}" Text="Година" />
+                        <TextBlock x:Name="YearText" Style="{StaticResource Value}" />
+                    </StackPanel>
+                    <StackPanel Grid.Row="2" Grid.Column="0" Margin="0,0,20,22">
+                        <TextBlock Style="{StaticResource Caption}" Text="Луни" />
+                        <TextBlock x:Name="MoonsText" Style="{StaticResource Value}" />
+                    </StackPanel>
+                    <StackPanel Grid.Row="2" Grid.Column="1" Margin="0,0,0,22">
+                        <TextBlock Style="{StaticResource Caption}" Text="Температура" />
+                        <TextBlock x:Name="TemperatureText" Style="{StaticResource Value}" />
+                    </StackPanel>
+                </Grid>
+
+                <StackPanel Grid.Row="3" Margin="0,6,0,0">
+                    <TextBlock Style="{StaticResource Caption}" Text="Интересно" />
+                    <TextBlock x:Name="Fact1Text" Style="{StaticResource Fact}" />
+                    <TextBlock x:Name="Fact2Text" Style="{StaticResource Fact}" />
+                </StackPanel>
+            </Grid>
+        </Viewbox>
+    </Border>
+</UserControl>

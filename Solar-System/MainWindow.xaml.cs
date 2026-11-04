@@ -5,15 +5,19 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using Solar_System.Camera;
+using Solar_System.Config;
 using Solar_System.Input;
+using Solar_System.Interaction;
+using Solar_System.Model;
 using Solar_System.Scene;
 using Solar_System.Simulation;
+using Solar_System.UI;
 
 namespace Solar_System
 {
     /// <summary>
-    /// The main window. Wires all parts of the app together.
-    /// Phase 2: moves the planets every frame and handles the simulation keys.
+    /// The main window. Wires all parts of the app together, runs the
+    /// per-frame update and handles the keyboard.
     /// </summary>
     public partial class MainWindow : Window
     {
@@ -22,6 +26,10 @@ namespace Solar_System
         private readonly SimulationClock clock = new SimulationClock();
         private readonly Stopwatch frameTimer = new Stopwatch();
         private List<BodyVisual> bodies = new List<BodyVisual>();
+        private InteractionController interaction;
+
+        private bool isFullscreen;
+        private WindowState stateBeforeFullscreen;
 
         public MainWindow()
         {
@@ -38,6 +46,13 @@ namespace Solar_System
         private void OnLoaded(object sender, RoutedEventArgs e)
         {
             bodies = SceneBuilder.Build(SceneViewport);
+            PlanetDataLoader.AttachInfo(bodies.ConvertAll(visual => visual.Body));
+
+            interaction = new InteractionController(
+                SceneViewport, bodies, cameraController, clock,
+                new MouseInput(InputSurface),
+                new HoverMarker(SceneViewport, HoverRing, HoverLabel),
+                PlanetInfoPanel, BackButton);
 
             // Runs once per screen frame. Using the real time between frames keeps the
             // speed the same on a slow PC and a fast PC.
@@ -75,6 +90,34 @@ namespace Solar_System
             {
                 body.UpdateMotion(clock.Time);
             }
+
+            interaction.Update(Math.Min(realSeconds, SimulationConfig.MaxFrameSeconds));
+        }
+
+        private void OnBackClicked(object sender, RoutedEventArgs e)
+        {
+            interaction.GoBack();
+        }
+
+        /// <summary>Fullscreen covers the taskbar too: the border must go before maximizing.</summary>
+        private void ToggleFullscreen()
+        {
+            isFullscreen = !isFullscreen;
+
+            if (isFullscreen)
+            {
+                stateBeforeFullscreen = WindowState;
+                WindowState = WindowState.Normal;
+                WindowStyle = WindowStyle.None;
+                ResizeMode = ResizeMode.NoResize; // otherwise the window is a bit bigger than the screen
+                WindowState = WindowState.Maximized;
+            }
+            else
+            {
+                WindowStyle = WindowStyle.SingleBorderWindow;
+                ResizeMode = ResizeMode.CanResize;
+                WindowState = stateBeforeFullscreen;
+            }
         }
 
         private void OnKeyDown(object sender, KeyEventArgs e)
@@ -99,6 +142,16 @@ namespace Solar_System
                 case Key.Subtract:
                     clock.SlowDown();
                     AppLog.Info("Simulation speed: x" + clock.Speed);
+                    break;
+                case Key.Escape:
+                case Key.Back:
+                    interaction.GoBack();
+                    break;
+                case Key.R:
+                    interaction.ResetCamera();
+                    break;
+                case Key.F11:
+                    ToggleFullscreen();
                     break;
             }
         }

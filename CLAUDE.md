@@ -84,7 +84,9 @@ Fields per body: name, type (e.g. "Rocky planet", "Gas giant", "Ice giant", "Sta
 "Moon"), diameter (km), average distance from the Sun (million km), length of day,
 length of year, number of moons, average temperature, 2 short fun facts.
 
-- **Language of the info text: Bulgarian.** (Change to English if the presentation is in English.)
+- **Language: ALL on-screen text is Bulgarian** — planet info, labels, buttons, Kinect status
+  and the start screen. Texts written in English in this document (e.g. "Back",
+  "Kinect connected") are descriptions: translate them in the app. The log stays in English.
 - Facts must be **accurate** — use well-established values (NASA-level facts) and
   keep numbers rounded and readable (e.g. "≈ 12 742 km"). Flag anything you are unsure of.
 - Text must be **big and readable from the back of a classroom**: short lines, large font.

@@ -44,6 +44,24 @@ namespace Solar_System.Model
         /// <summary>True for the Sun: it shines by itself instead of being lit.</summary>
         public bool IsSelfLit { get; set; }
 
+        /// <summary>Outer edge of a ring around the body. 0 means it has no ring.</summary>
+        public double RingOuterRadius { get; set; }
+
+        /// <summary>The body's full size, including a ring if it has one.</summary>
+        public double ExtentRadius
+        {
+            get { return Math.Max(Radius, RingOuterRadius); }
+        }
+
+        /// <summary>The text from planets.json. Null if there is no entry for this body.</summary>
+        public PlanetInfo Info { get; set; }
+
+        /// <summary>The name to show on screen.</summary>
+        public string DisplayName
+        {
+            get { return Info != null ? Info.Name : Name; }
+        }
+
         /// <summary>Position relative to the parent at the given orbit angle (orbits lie flat, Z is up).</summary>
         public Vector3D GetOrbitOffset(double angleDegrees)
         {

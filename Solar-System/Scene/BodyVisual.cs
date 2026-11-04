@@ -1,3 +1,4 @@
+using System;
 using System.Windows.Media.Media3D;
 using Solar_System.Model;
 
@@ -5,11 +6,12 @@ namespace Solar_System.Scene
 {
     /// <summary>
     /// The 3D object of one body: a sphere that spins, leans on its axis and moves along its orbit.
-    /// Highlight, label and hit sphere come in Phase 3.
+    /// The hover highlight is in UI/HoverMarker.cs, and the hit sphere is in BodyPicker.cs.
     /// </summary>
     public sealed class BodyVisual
     {
         private readonly AxisAngleRotation3D spin = new AxisAngleRotation3D(new Vector3D(0, 0, 1), 0);
+        private double extraSpinDegrees; // added by the user in Focus mode
 
         // One shared move. Saturn's ring uses it too, so the ring always stays with Saturn.
         private readonly TranslateTransform3D translation = new TranslateTransform3D();
@@ -47,12 +49,23 @@ namespace Solar_System.Scene
         }
 
         /// <summary>
+        /// Turn the body by hand, on top of its normal spin. Positive moves the
+        /// side facing the viewer to the right on screen, whichever way the axis leans.
+        /// </summary>
+        public void AddSpin(double degrees)
+        {
+            // Venus leans over by more than 90 degrees, so its axis points down: flip the direction.
+            bool axisPointsDown = Math.Cos(Body.AxialTiltDegrees * Math.PI / 180.0) < 0;
+            extraSpinDegrees = (extraSpinDegrees + (axisPointsDown ? -degrees : degrees)) % 360.0;
+        }
+
+        /// <summary>
         /// Put the body where it belongs at this simulation time.
         /// A parent must be updated before the bodies that circle it.
         /// </summary>
         public void UpdateMotion(double simulationSeconds)
         {
-            spin.Angle = 360.0 * simulationSeconds / Body.SpinSeconds % 360.0;
+            spin.Angle = (360.0 * simulationSeconds / Body.SpinSeconds + extraSpinDegrees) % 360.0;
 
             if (ParentVisual != null)
             {

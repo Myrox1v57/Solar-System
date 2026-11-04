@@ -20,8 +20,8 @@ namespace Solar_System.Config
         /// <summary>Distance from the camera to the Sun.</summary>
         public const double OverviewDistance = 90;
         /// <summary>
-        /// The camera aims this far below the Sun. That moves the whole system up on screen,
-        /// so the orbits nearest the camera are not cut off by the bottom edge.
+        /// At the start tilt, the camera aims this far below the Sun. That moves the whole system
+        /// up on screen, so the orbits nearest the camera are not cut off by the bottom edge.
         /// </summary>
         public const double OverviewAimHeight = -9;
         /// <summary>Horizontal field of view in degrees.</summary>
@@ -87,6 +87,48 @@ namespace Solar_System.Config
         /// <summary>Longest time one frame may count for, so a short freeze does not make planets jump.</summary>
         public const double MaxFrameSeconds = 0.1;
 
+        // ---- Pointer (mouse now, Kinect hand later) ----
+        /// <summary>Moving less than this while pressed still counts as a click, not a drag.</summary>
+        public const double DragThresholdPixels = 6;
+        /// <summary>Every planet can be hit at least this far from its center, so small ones are easy to hit.</summary>
+        public const double MinHitRadius = 1.6;
+        /// <summary>The hit sphere is this much bigger than the planet.</summary>
+        public const double HitRadiusFactor = 1.1;
+
+        // ---- Overview camera movement ----
+        public const double CameraDragDegreesPerPixel = 0.25;
+        public const double MinTiltDegrees = 5;
+        public const double MaxTiltDegrees = 85;
+        public const double MinOverviewDistance = 45;
+        public const double MaxOverviewDistance = 130;
+        /// <summary>One notch of the mouse wheel multiplies the distance by this.</summary>
+        public const double ZoomPerWheelNotch = 0.9;
+        /// <summary>How quickly the camera catches up with a drag or zoom. Higher = snappier, lower = smoother.</summary>
+        public const double CameraSmoothing = 8;
+
+        // ---- Focus mode ----
+        public const double FlySeconds = 1.5;
+        /// <summary>Camera distance in planet radii. Smaller = the planet looks bigger.</summary>
+        public const double FocusDistanceFactor = 4.3;
+        /// <summary>A body with a ring counts as this part of its full size, so Saturn does not look tiny.</summary>
+        public const double RingFocusSize = 0.75;
+        /// <summary>Where the planet's center sits on screen: 0 = left edge, 0.5 = middle.</summary>
+        public const double FocusScreenCenter = 0.30;
+        /// <summary>The camera looks from the Sun's side, turned this far so a bit of the dark side shows.</summary>
+        public const double FocusSideAngleDegrees = 35;
+        /// <summary>How far above the planet's equator the camera sits.</summary>
+        public const double FocusHeightDegrees = 12;
+        /// <summary>Simulation speed in Focus mode, so the orbits nearly stop.</summary>
+        public const double FocusSimulationSpeed = 0.02;
+        /// <summary>How quickly the simulation slows down and speeds up again.</summary>
+        public const double SlowMotionSmoothing = 3;
+        /// <summary>The planet's slow rotation in Focus mode.</summary>
+        public const double FocusSpinDegreesPerSecond = 6;
+        public const double SpinDragDegreesPerPixel = 0.4;
+        /// <summary>How quickly a spin from a drag fades. Lower = the planet keeps turning for longer.</summary>
+        public const double SpinMomentumFade = 1.5;
+        public const double InfoPanelSlideSeconds = 0.4;
+
         /// <summary>
         /// All bodies. A parent must come before the bodies that circle it.
         /// Axial tilts, orbit years and spin days are real values. Venus and Uranus really
@@ -106,6 +148,9 @@ namespace Solar_System.Config
             };
 
             var earth = Planet(sun, "Earth", "2k_earth_daymap.jpg", Color.FromRgb(60, 110, 200), 0.8, 12.5, 200, 23.44, 1.0, 0.9973);
+
+            var saturn = Planet(sun, "Saturn", "2k_saturn.jpg", Color.FromRgb(215, 190, 140), 1.9, 28.5, 150, 26.73, 29.457, 0.444);
+            saturn.RingOuterRadius = saturn.Radius * RingOuterRadiusFactor;
 
             return new List<CelestialBody>
             {
@@ -128,7 +173,7 @@ namespace Solar_System.Config
                 },
                 Planet(sun, "Mars", "2k_mars.jpg", Color.FromRgb(195, 95, 60), 0.6, 16.0, 330, 25.19, 1.8808, 1.026),
                 Planet(sun, "Jupiter", "2k_jupiter.jpg", Color.FromRgb(205, 170, 135), 2.2, 21.5, 20, 3.13, 11.862, 0.4135),
-                Planet(sun, "Saturn", "2k_saturn.jpg", Color.FromRgb(215, 190, 140), 1.9, 28.5, 150, 26.73, 29.457, 0.444),
+                saturn,
                 Planet(sun, "Uranus", "2k_uranus.jpg", Color.FromRgb(150, 215, 225), 1.25, 34.5, 200, 97.77, 84.02, 0.7183),
                 Planet(sun, "Neptune", "2k_neptune.jpg", Color.FromRgb(70, 100, 215), 1.2, 39.5, 100, 28.32, 164.8, 0.6713)
             };

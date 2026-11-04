@@ -28,7 +28,7 @@ namespace Solar_System.Input
             // Remember the UI thread. Kinect events can arrive on other threads.
             dispatcher = Dispatcher.CurrentDispatcher;
             State = KinectConnectionState.NoKinect;
-            StatusMessage = "Looking for Kinect...";
+            StatusMessage = "Търсене на Kinect...";
         }
 
         /// <summary>Raised (on the UI thread) whenever State or StatusMessage changes.</summary>
@@ -36,7 +36,7 @@ namespace Solar_System.Input
 
         public KinectConnectionState State { get; private set; }
 
-        /// <summary>Short text for the screen, e.g. "Kinect connected!".</summary>
+        /// <summary>Short text for the screen, shown in Bulgarian.</summary>
         public string StatusMessage { get; private set; }
 
         /// <summary>Start looking for a Kinect. Safe to call when no Kinect (or no SDK) is installed.</summary>
@@ -55,7 +55,7 @@ namespace Solar_System.Input
             {
                 // Usually means the Kinect runtime/drivers are not installed on this PC.
                 AppLog.Error("Could not access the Kinect SDK", ex);
-                SetStatus(KinectConnectionState.NoKinect, "No Kinect found (Kinect SDK 1.8 not installed?)");
+                SetStatus(KinectConnectionState.NoKinect, "Няма Kinect (инсталиран ли е Kinect SDK 1.8?)");
             }
         }
 
@@ -106,7 +106,7 @@ namespace Solar_System.Input
                     candidate.Start();
                     sensor = candidate;
                     AppLog.Info("Kinect started");
-                    SetStatus(KinectConnectionState.Connected, "Kinect connected!");
+                    SetStatus(KinectConnectionState.Connected, "Kinect е свързан");
                     return;
                 }
                 catch (Exception ex)
@@ -127,16 +127,16 @@ namespace Solar_System.Input
                 switch (candidate.Status)
                 {
                     case KinectStatus.NotPowered:
-                        return "Kinect found, but it has no power - check the power adapter";
+                        return "Kinect няма захранване - проверете адаптера";
                     case KinectStatus.Initializing:
-                        return "Kinect is starting up...";
+                        return "Kinect се стартира...";
                     case KinectStatus.InsufficientBandwidth:
-                        return "Kinect found, but the USB port is too busy - try another USB port";
+                        return "USB портът е зает - опитайте друг USB порт";
                     case KinectStatus.Connected:
-                        return "Kinect found, but it is in use by another program";
+                        return "Kinect се използва от друга програма";
                 }
             }
-            return "No Kinect found";
+            return "Няма свързан Kinect";
         }
 
         private void StopSensor()
@@ -156,7 +156,7 @@ namespace Solar_System.Input
                 AppLog.Error("Error while stopping the Kinect", ex);
             }
             sensor = null;
-            SetStatus(KinectConnectionState.NoKinect, "No Kinect found");
+            SetStatus(KinectConnectionState.NoKinect, "Няма свързан Kinect");
         }
 
         private void SetStatus(KinectConnectionState state, string message)
