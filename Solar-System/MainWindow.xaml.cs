@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Windows;
@@ -21,7 +21,7 @@ namespace Solar_System
     /// </summary>
     public partial class MainWindow : Window
     {
-        private readonly KinectInput kinect = new KinectInput();
+        private readonly KinectInput kinect;
         private readonly CameraController cameraController = new CameraController();
         private readonly SimulationClock clock = new SimulationClock();
         private readonly Stopwatch frameTimer = new Stopwatch();
@@ -35,6 +35,7 @@ namespace Solar_System
         {
             InitializeComponent();
 
+            kinect = new KinectInput(KinectArea, InputSurface);
             SceneViewport.Camera = cameraController.Camera;
 
             kinect.StatusChanged += OnKinectStatusChanged;
@@ -50,8 +51,9 @@ namespace Solar_System
 
             interaction = new InteractionController(
                 SceneViewport, bodies, cameraController, clock,
-                new MouseInput(InputSurface),
+                new IPointerInput[] { new MouseInput(InputSurface), kinect },
                 new HoverMarker(SceneViewport, HoverRing, HoverLabel),
+                new DwellRing(DwellProgressRing),
                 PlanetInfoPanel, BackButton);
 
             // Runs once per screen frame. Using the real time between frames keeps the
@@ -91,6 +93,7 @@ namespace Solar_System
                 body.UpdateMotion(clock.Time);
             }
 
+            kinect.Update();
             interaction.Update(Math.Min(realSeconds, SimulationConfig.MaxFrameSeconds));
         }
 
@@ -153,6 +156,9 @@ namespace Solar_System
                 case Key.F11:
                     ToggleFullscreen();
                     break;
+                case Key.K:
+                    kinect.ToggleEnabled();
+                    break;
             }
         }
 
@@ -163,10 +169,10 @@ namespace Solar_System
 
         private void ShowKinectStatus()
         {
-            KinectStatusText.Text = kinect.StatusMessage;
-            KinectStatusText.Foreground = kinect.State == KinectConnectionState.Connected
-                ? Brushes.LightGreen
-                : Brushes.Orange;
+            KinectStatus.Show(kinect.State, kinect.StatusMessage);
+
+            bool waitingForHand = kinect.State == KinectState.WaitingForUser || kinect.State == KinectState.UserSeen;
+            RaiseHandPrompt.Visibility = waitingForHand ? Visibility.Visible : Visibility.Collapsed;
         }
     }
 }

@@ -36,6 +36,14 @@ namespace Solar_System.Input
         public event Action DragEnded;
         public event Action<double> Zoomed;
 
+        // A mouse has no fist, so this never happens.
+        public event Action<Point> Grabbed { add { } remove { } }
+
+        public bool UsesDwell
+        {
+            get { return false; }
+        }
+
         private void OnMouseDown(object sender, MouseButtonEventArgs e)
         {
             isPressed = true;

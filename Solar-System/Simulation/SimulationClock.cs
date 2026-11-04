@@ -22,12 +22,24 @@ namespace Solar_System.Simulation
         /// <summary>True in Focus mode. The orbits then gently slow down until they nearly stop.</summary>
         public bool IsSlowMotion { get; set; }
 
+        /// <summary>True while the pointer is on a planet, so a fast planet does not run away from it.</summary>
+        public bool IsHoverSlowdown { get; set; }
+
         /// <summary>Call once per frame with the real seconds since the last frame.</summary>
         public void Advance(double realSeconds)
         {
             double seconds = Math.Min(realSeconds, SimulationConfig.MaxFrameSeconds);
 
-            double target = IsSlowMotion ? SimulationConfig.FocusSimulationSpeed : 1;
+            double target = 1;
+            if (IsHoverSlowdown)
+            {
+                target = SimulationConfig.HoverSimulationSpeed;
+            }
+            if (IsSlowMotion)
+            {
+                target = SimulationConfig.FocusSimulationSpeed;
+            }
+
             slowMotionFactor += (target - slowMotionFactor)
                                 * (1 - Math.Exp(-SimulationConfig.SlowMotionSmoothing * seconds));
 

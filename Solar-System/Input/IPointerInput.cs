@@ -19,6 +19,9 @@ namespace Solar_System.Input
         /// <summary>The user selected whatever is at this position.</summary>
         event Action<Point> Selected;
 
+        /// <summary>The user closed a fist at this position. Only the Kinect has this.</summary>
+        event Action<Point> Grabbed;
+
         event Action DragStarted;
 
         /// <summary>The pointer moved this far during a drag.</summary>
@@ -28,5 +31,8 @@ namespace Solar_System.Input
 
         /// <summary>Zoom in (positive) or out (negative), in steps.</summary>
         event Action<double> Zoomed;
+
+        /// <summary>True if keeping the pointer still over something should select it.</summary>
+        bool UsesDwell { get; }
     }
 }

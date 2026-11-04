@@ -12,21 +12,26 @@ using Solar_System.UI;
 namespace Solar_System.Interaction
 {
     /// <summary>
-    /// The rules of the app: what hover, select and drag do in Overview and in Focus mode.
+    /// The rules of the app: what hover, select, fist and drag do in Overview and in Focus mode.
     /// It only talks to IPointerInput, so it works the same for the mouse and the Kinect.
     /// </summary>
     public sealed class InteractionController
     {
+        private const double BackButtonExtraMargin = 20; // the hand may miss the button by this much
+
         private readonly Viewport3D viewport;
         private readonly List<BodyVisual> bodies;
         private readonly CameraController camera;
         private readonly SimulationClock clock;
         private readonly HoverMarker hoverMarker;
+        private readonly DwellRing dwellRing;
         private readonly InfoPanel infoPanel;
-        private readonly UIElement backButton;
+        private readonly FrameworkElement backButton;
+        private readonly DwellTimer dwellTimer = new DwellTimer();
 
         private BodyVisual focusBody;   // null means Overview mode
-        private Point? pointer;         // null when the pointer is not in the window
+        private Point? pointer;         // null when no pointer is in the window
+        private bool pointerUsesDwell;  // true when the last pointer to move was the Kinect hand
         private bool isDragging;
 
         // Focus mode spinning. The speed is in degrees per second.
@@ -34,23 +39,22 @@ namespace Solar_System.Interaction
         private double draggedDegrees;  // how far the user dragged since the last frame
 
         public InteractionController(Viewport3D viewport, List<BodyVisual> bodies, CameraController camera,
-            SimulationClock clock, IPointerInput input, HoverMarker hoverMarker, InfoPanel infoPanel, UIElement backButton)
+            SimulationClock clock, IEnumerable<IPointerInput> inputs, HoverMarker hoverMarker, DwellRing dwellRing,
+            InfoPanel infoPanel, FrameworkElement backButton)
         {
             this.viewport = viewport;
             this.bodies = bodies;
             this.camera = camera;
             this.clock = clock;
             this.hoverMarker = hoverMarker;
+            this.dwellRing = dwellRing;
             this.infoPanel = infoPanel;
             this.backButton = backButton;
 
-            input.Moved += position => pointer = position;
-            input.Left += () => pointer = null;
-            input.Selected += OnSelected;
-            input.DragStarted += () => isDragging = true;
-            input.DragMoved += OnDragMoved;
-            input.DragEnded += () => isDragging = false;
-            input.Zoomed += OnZoomed;
+            foreach (IPointerInput input in inputs)
+            {
+                Listen(input);
+            }
         }
 
         private bool IsInOverview
@@ -69,12 +73,12 @@ namespace Solar_System.Interaction
             AppLog.Info("Back to Overview");
             focusBody = null;
             spinSpeed = 0;
+            isDragging = false;
             camera.FlyToOverview();
             clock.IsSlowMotion = false;
             infoPanel.SlideOut();
             backButton.Visibility = Visibility.Collapsed;
         }
-
 
         public void ResetCamera()
         {
@@ -95,8 +99,28 @@ namespace Solar_System.Interaction
             camera.Update(seconds);
 
             // Check every frame, not only when the pointer moves: planets move under it too.
-            hoverMarker.Show(CanHover() ? PickAtPointer() : null);
+            BodyVisual hovered = CanHover() ? BodyPicker.Pick(viewport, bodies, pointer.Value) : null;
+            hoverMarker.Show(hovered);
             hoverMarker.Update();
+            clock.IsHoverSlowdown = hovered != null;
+
+            UpdateDwell(hovered, seconds);
+        }
+
+        private void Listen(IPointerInput input)
+        {
+            input.Moved += position =>
+            {
+                pointer = position;
+                pointerUsesDwell = input.UsesDwell;
+            };
+            input.Left += () => pointer = null;
+            input.Selected += OnSelected;
+            input.Grabbed += OnGrabbed;
+            input.DragStarted += () => isDragging = true;
+            input.DragMoved += OnDragMoved;
+            input.DragEnded += () => isDragging = false;
+            input.Zoomed += OnZoomed;
         }
 
         private bool CanHover()
@@ -104,19 +128,63 @@ namespace Solar_System.Interaction
             return IsInOverview && !camera.IsFlying && !isDragging && pointer.HasValue;
         }
 
-        private BodyVisual PickAtPointer()
+        private bool IsOverBackButton(Point position)
         {
-            return BodyPicker.Pick(viewport, bodies, pointer.Value);
+            if (backButton.Visibility != Visibility.Visible)
+            {
+                return false;
+            }
+
+            Point topLeft = backButton.TranslatePoint(new Point(0, 0), viewport);
+            var area = new Rect(topLeft, backButton.RenderSize);
+            area.Inflate(BackButtonExtraMargin, BackButtonExtraMargin);
+            return area.Contains(position);
         }
 
         private void OnSelected(Point position)
         {
-            if (!IsInOverview || camera.IsFlying)
+            if (camera.IsFlying)
             {
                 return;
             }
 
-            BodyVisual body = BodyPicker.Pick(viewport, bodies, position);
+            if (IsOverBackButton(position))
+            {
+                GoBack();
+            }
+            else if (IsInOverview)
+            {
+                EnterFocus(BodyPicker.Pick(viewport, bodies, position));
+            }
+        }
+
+        /// <summary>A fist selects what is under the hand. On empty space it starts a drag.</summary>
+        private void OnGrabbed(Point position)
+        {
+            if (camera.IsFlying)
+            {
+                return;
+            }
+
+            if (IsOverBackButton(position))
+            {
+                GoBack();
+                return;
+            }
+
+            BodyVisual body = IsInOverview ? BodyPicker.Pick(viewport, bodies, position) : null;
+            if (body != null)
+            {
+                EnterFocus(body);
+            }
+            else
+            {
+                isDragging = true;
+            }
+        }
+
+        private void EnterFocus(BodyVisual body)
+        {
             if (body == null)
             {
                 return;
@@ -125,6 +193,7 @@ namespace Solar_System.Interaction
             AppLog.Info("Focus on " + body.Body.Name);
             focusBody = body;
             spinSpeed = SimulationConfig.FocusSpinDegreesPerSecond;
+            isDragging = false;
             camera.FlyTo(body);
             clock.IsSlowMotion = true;
             infoPanel.SlideIn(body.Body);
@@ -133,16 +202,18 @@ namespace Solar_System.Interaction
 
         private void OnDragMoved(Vector movement)
         {
-            if (IsInOverview)
+            if (!isDragging)
             {
-                if (!camera.IsFlying)
-                {
-                    camera.Drag(movement.X, movement.Y);
-                }
+                return; // for example a fist that just selected a planet and is still closed
             }
-            else
+
+            if (!IsInOverview)
             {
                 draggedDegrees += movement.X * SimulationConfig.SpinDragDegreesPerPixel;
+            }
+            else if (!camera.IsFlying)
+            {
+                camera.Drag(movement.X, movement.Y);
             }
         }
 
@@ -151,6 +222,34 @@ namespace Solar_System.Interaction
             if (IsInOverview && !camera.IsFlying)
             {
                 camera.Zoom(steps);
+            }
+        }
+
+        /// <summary>Holding the hand still on a planet or on the Back button selects it.</summary>
+        private void UpdateDwell(BodyVisual hovered, double seconds)
+        {
+            object target = null;
+            if (pointerUsesDwell && pointer.HasValue && !isDragging && !camera.IsFlying)
+            {
+                target = IsInOverview ? (object)hovered : (IsOverBackButton(pointer.Value) ? backButton : null);
+            }
+
+            double progress = dwellTimer.Update(target, pointer ?? new Point(), seconds);
+            dwellRing.Show(pointer, progress);
+
+            if (progress >= 1)
+            {
+                dwellTimer.Reset();
+                dwellRing.Show(null, 0);
+
+                if (IsInOverview)
+                {
+                    EnterFocus(hovered);
+                }
+                else
+                {
+                    GoBack();
+                }
             }
         }
 

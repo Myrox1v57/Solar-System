@@ -91,9 +91,24 @@ namespace Solar_System.Config
         /// <summary>Moving less than this while pressed still counts as a click, not a drag.</summary>
         public const double DragThresholdPixels = 6;
         /// <summary>Every planet can be hit at least this far from its center, so small ones are easy to hit.</summary>
-        public const double MinHitRadius = 1.6;
+        public const double MinHitRadius = 2.0;
         /// <summary>The hit sphere is this much bigger than the planet.</summary>
         public const double HitRadiusFactor = 1.1;
+
+        /// <summary>Planets slow to this speed while the pointer is on one, so fast ones can be caught.</summary>
+        public const double HoverSimulationSpeed = 0.15;
+
+        // ---- Kinect hand ----
+        /// <summary>How much of the way the cursor moves toward the hand each update. Lower = calmer but slower.</summary>
+        public const double KinectPointerSmoothing = 0.6;
+        /// <summary>Hand drags are multiplied by this. Higher = less arm movement is needed.</summary>
+        public const double KinectDragSensitivity = 1.5;
+        /// <summary>How long to hold the hand still to select.</summary>
+        public const double DwellSeconds = 2;
+        /// <summary>The hand may wander this far during those seconds.</summary>
+        public const double DwellTolerancePixels = 45;
+        /// <summary>The progress ring appears after this part of the time, so it does not flicker while passing by.</summary>
+        public const double DwellRingShowsFrom = 0.15;
 
         // ---- Overview camera movement ----
         public const double CameraDragDegreesPerPixel = 0.25;
@@ -121,7 +136,7 @@ namespace Solar_System.Config
         /// <summary>Simulation speed in Focus mode, so the orbits nearly stop.</summary>
         public const double FocusSimulationSpeed = 0.02;
         /// <summary>How quickly the simulation slows down and speeds up again.</summary>
-        public const double SlowMotionSmoothing = 3;
+        public const double SlowMotionSmoothing = 6;
         /// <summary>The planet's slow rotation in Focus mode.</summary>
         public const double FocusSpinDegreesPerSecond = 6;
         public const double SpinDragDegreesPerPixel = 0.4;

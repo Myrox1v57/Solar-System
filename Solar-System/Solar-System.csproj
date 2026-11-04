@@ -146,6 +146,14 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Page Include="UI\StatusIndicator.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Compile Include="UI\StatusIndicator.xaml.cs">
+      <DependentUpon>StatusIndicator.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="UI\InfoPanel.xaml.cs">
       <DependentUpon>InfoPanel.xaml</DependentUpon>
       <SubType>Code</SubType>
@@ -164,6 +172,7 @@
     <Compile Include="Input\IPointerInput.cs" />
     <Compile Include="Input\KinectInput.cs" />
     <Compile Include="Input\MouseInput.cs" />
+    <Compile Include="Interaction\DwellTimer.cs" />
     <Compile Include="Interaction\InteractionController.cs" />
     <Compile Include="Model\CelestialBody.cs" />
     <Compile Include="Model\PlanetDataLoader.cs" />
@@ -173,6 +182,7 @@
     <Compile Include="Scene\SceneBuilder.cs" />
     <Compile Include="Scene\TextureLoader.cs" />
     <Compile Include="Simulation\SimulationClock.cs" />
+    <Compile Include="UI\DwellRing.cs" />
     <Compile Include="UI\HoverMarker.cs" />
   </ItemGroup>
 

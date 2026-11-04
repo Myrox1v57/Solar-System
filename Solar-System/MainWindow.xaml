@@ -3,13 +3,14 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:k="http://schemas.microsoft.com/kinect/2013"
         xmlns:ui="clr-namespace:Solar_System.UI"
         mc:Ignorable="d"
         Title="Слънчева система с Kinect" Height="720" Width="1280"
         WindowStartupLocation="CenterScreen"
         Background="Black">
     <Window.Resources>
-        <!-- The big Back button: rounded, see-through, and it lights up under the pointer. -->
+        <!-- The big Back button: rounded, see-through, and it lights up under the pointer or the hand. -->
         <Style x:Key="BackButtonStyle" TargetType="Button">
             <Setter Property="Foreground" Value="White" />
             <Setter Property="FontSize" Value="42" />
@@ -26,6 +27,10 @@
                                 <Setter TargetName="Box" Property="Background" Value="#E03A5F96" />
                                 <Setter TargetName="Box" Property="BorderBrush" Value="White" />
                             </Trigger>
+                            <Trigger Property="k:KinectRegion.IsPrimaryHandPointerOver" Value="True">
+                                <Setter TargetName="Box" Property="Background" Value="#E03A5F96" />
+                                <Setter TargetName="Box" Property="BorderBrush" Value="White" />
+                            </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
@@ -33,45 +38,74 @@
         </Style>
     </Window.Resources>
 
-    <!-- InputSurface catches the pointer. It needs a background, or empty space gets no clicks. -->
-    <Grid x:Name="InputSurface" Background="Black">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="3*" />
-            <ColumnDefinition Width="2*" />
-        </Grid.ColumnDefinitions>
+    <!-- The Toolkit's KinectRegion tracks the hand and draws the hand cursor over everything inside it. -->
+    <k:KinectRegion x:Name="KinectArea">
 
-        <!-- The 3D scene. SceneBuilder fills it when the window opens. -->
-        <Viewport3D x:Name="SceneViewport" Grid.ColumnSpan="2" />
+        <!-- InputSurface catches the pointer. It needs a background, or empty space gets no clicks. -->
+        <Grid x:Name="InputSurface" Background="Black">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="3*" />
+                <ColumnDefinition Width="2*" />
+            </Grid.ColumnDefinitions>
 
-        <!-- Hover highlight: a glowing circle and the planet's name, drawn over the 3D scene. -->
-        <Canvas Grid.ColumnSpan="2" IsHitTestVisible="False">
-            <Ellipse x:Name="HoverRing" Stroke="#BFE4FF" StrokeThickness="3">
-                <Ellipse.Effect>
-                    <DropShadowEffect Color="#59B8FF" BlurRadius="20" ShadowDepth="0" Opacity="1" />
-                </Ellipse.Effect>
-            </Ellipse>
-            <TextBlock x:Name="HoverLabel" FontSize="34" FontWeight="SemiBold" Foreground="White">
+            <!-- The 3D scene. SceneBuilder fills it when the window opens. It ignores the pointer
+                 because BodyPicker finds the planets, and testing every 3D triangle for each
+                 hand update would be slow. -->
+            <Viewport3D x:Name="SceneViewport" Grid.ColumnSpan="2" IsHitTestVisible="False" />
+
+            <!-- Hover highlight and dwell ring, drawn over the 3D scene. -->
+            <Canvas Grid.ColumnSpan="2" IsHitTestVisible="False">
+                <Ellipse x:Name="HoverRing" Stroke="#BFE4FF" StrokeThickness="3">
+                    <Ellipse.Effect>
+                        <DropShadowEffect Color="#59B8FF" BlurRadius="20" ShadowDepth="0" Opacity="1" />
+                    </Ellipse.Effect>
+                </Ellipse>
+                <TextBlock x:Name="HoverLabel" FontSize="34" FontWeight="SemiBold" Foreground="White">
+                    <TextBlock.Effect>
+                        <DropShadowEffect Color="Black" BlurRadius="8" ShadowDepth="0" Opacity="1" />
+                    </TextBlock.Effect>
+                </TextBlock>
+                <Ellipse x:Name="DwellProgressRing" Width="130" Height="130" Stroke="#FFC56B" StrokeThickness="10"
+                         RenderTransformOrigin="0.5,0.5">
+                    <Ellipse.RenderTransform>
+                        <RotateTransform Angle="-90" />
+                    </Ellipse.RenderTransform>
+                </Ellipse>
+            </Canvas>
+
+            <!-- Shown while nobody controls the app with a hand. -->
+            <TextBlock x:Name="RaiseHandPrompt" Grid.ColumnSpan="2"
+                       Text="Застанете пред камерата и вдигнете ръка"
+                       FontSize="38" FontWeight="SemiBold" Foreground="White" IsHitTestVisible="False"
+                       HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,70"
+                       Visibility="Collapsed">
                 <TextBlock.Effect>
-                    <DropShadowEffect Color="Black" BlurRadius="8" ShadowDepth="0" Opacity="1" />
+                    <DropShadowEffect Color="Black" BlurRadius="10" ShadowDepth="0" Opacity="1" />
                 </TextBlock.Effect>
+                <!-- Hidden in Focus mode (the Back button is only there then), or the panel would cut it off. -->
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Visibility, ElementName=BackButton}" Value="Visible">
+                                <Setter Property="Opacity" Value="0" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
             </TextBlock>
-        </Canvas>
 
-        <!-- Clicks pass through the panel, so it never blocks dragging the planet. -->
-        <ui:InfoPanel x:Name="PlanetInfoPanel" Grid.Column="1" IsHitTestVisible="False" />
+            <!-- Clicks pass through the panel, so it never blocks dragging the planet. -->
+            <ui:InfoPanel x:Name="PlanetInfoPanel" Grid.Column="1" IsHitTestVisible="False" />
 
-        <!-- Focusable="False", or Space would press this button instead of pausing. -->
-        <Button x:Name="BackButton" Grid.ColumnSpan="2" Content="← Назад"
-                Style="{StaticResource BackButtonStyle}" Focusable="False"
-                Width="240" Height="120" Margin="28"
-                HorizontalAlignment="Left" VerticalAlignment="Top"
-                Visibility="Collapsed" Click="OnBackClicked" />
+            <!-- Focusable="False", or Space would press this button instead of pausing. -->
+            <Button x:Name="BackButton" Grid.ColumnSpan="2" Content="← Назад"
+                    Style="{StaticResource BackButtonStyle}" Focusable="False"
+                    Width="240" Height="120" Margin="28"
+                    HorizontalAlignment="Left" VerticalAlignment="Top"
+                    Visibility="Collapsed" Click="OnBackClicked" />
 
-        <!-- Small Kinect status in the corner. The full status indicator comes in Phase 4. -->
-        <TextBlock x:Name="KinectStatusText" Grid.ColumnSpan="2"
-                   Text="Търсене на Kinect..."
-                   FontSize="20" Foreground="Orange" IsHitTestVisible="False"
-                   HorizontalAlignment="Left" VerticalAlignment="Bottom"
-                   Margin="24,0,0,16" />
-    </Grid>
+            <ui:StatusIndicator x:Name="KinectStatus" Grid.ColumnSpan="2"
+                                HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="20,0,0,14" />
+        </Grid>
+    </k:KinectRegion>
 </Window>
