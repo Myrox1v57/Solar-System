@@ -59,7 +59,17 @@
       <HintPath>$(KinectSdkDir)Assemblies\Microsoft.Kinect.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <!-- Kinect Developer Toolkit 1.8: hand pointer, grip and press detection (used from Phase 4). -->
+    <!-- Kinect Developer Toolkit 1.8: KinectRegion, hand pointer, grip and press detection (used from Phase 4). -->
+    <Reference Include="Microsoft.Kinect.Toolkit">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(KinectToolkitDir)Assemblies\Microsoft.Kinect.Toolkit.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.Kinect.Toolkit.Controls">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(KinectToolkitDir)Assemblies\Microsoft.Kinect.Toolkit.Controls.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Microsoft.Kinect.Toolkit.Interaction">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>$(KinectToolkitDir)Assemblies\Microsoft.Kinect.Toolkit.Interaction.dll</HintPath>
@@ -86,6 +96,14 @@
     <PackageReference Include="HelixToolkit.Wpf">
       <Version>2.27.3</Version>
     </PackageReference>
+    <!--
+      Build-time only: gives the compiler the .NET Framework 4.8 reference files, so the project
+      builds even on a PC without the 4.8 Developer Pack. Nothing from it ships with the app.
+    -->
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies">
+      <Version>1.0.3</Version>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
   </ItemGroup>
 
   <!--
@@ -108,6 +126,8 @@
   <!-- Friendly build warnings if the Kinect files are not where we expect them. -->
   <Target Name="CheckKinectFiles" BeforeTargets="BeforeBuild">
     <Warning Condition="!Exists('$(KinectSdkDir)Assemblies\Microsoft.Kinect.dll')" Text="Kinect SDK 1.8 not found in '$(KinectSdkDir)'. Install 'Kinect for Windows SDK v1.8'." />
+    <Warning Condition="!Exists('$(KinectToolkitDir)Assemblies\Microsoft.Kinect.Toolkit.dll')" Text="Microsoft.Kinect.Toolkit.dll not found in '$(KinectToolkitDir)Assemblies\'. Install 'Kinect for Windows Developer Toolkit v1.8'." />
+    <Warning Condition="!Exists('$(KinectToolkitDir)Assemblies\Microsoft.Kinect.Toolkit.Controls.dll')" Text="Microsoft.Kinect.Toolkit.Controls.dll not found in '$(KinectToolkitDir)Assemblies\'. Install 'Kinect for Windows Developer Toolkit v1.8'." />
     <Warning Condition="!Exists('$(KinectToolkitDir)Assemblies\Microsoft.Kinect.Toolkit.Interaction.dll')" Text="Microsoft.Kinect.Toolkit.Interaction.dll not found in '$(KinectToolkitDir)Assemblies\'. Install 'Kinect for Windows Developer Toolkit v1.8'." />
     <Warning Condition="!Exists('$(KinectToolkitDir)Redist\amd64\KinectInteraction180_64.dll') And !Exists('$(KinectToolkitDir)Redist\x64\KinectInteraction180_64.dll')" Text="KinectInteraction180_64.dll not found in '$(KinectToolkitDir)Redist\'. Install 'Kinect for Windows Developer Toolkit v1.8'." />
   </Target>
@@ -172,4 +192,14 @@
     <None Include="App.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+
+  <!--
+    While compiling XAML, WPF makes a temporary copy of this project (named ..._wpftmp) that does
+    not receive NuGet's settings. So we point that copy at the .NET 4.8 reference files ourselves.
+    Keep the version here the same as the Microsoft.NETFramework.ReferenceAssemblies package above.
+  -->
+  <PropertyGroup>
+    <Net48ReferenceTargets>$(UserProfile)\.nuget\packages\microsoft.netframework.referenceassemblies.net48\1.0.3\build\Microsoft.NETFramework.ReferenceAssemblies.net48.targets</Net48ReferenceTargets>
+  </PropertyGroup>
+  <Import Project="$(Net48ReferenceTargets)" Condition="$(MSBuildProjectName.EndsWith('_wpftmp')) And Exists('$(Net48ReferenceTargets)')" />
 </Project>
