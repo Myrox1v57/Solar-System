@@ -129,6 +129,8 @@ Use the Developer Toolkit's **KinectRegion + interaction stream** (hand pointer)
   progress ring around the cursor while dwelling. Dwell is the reliable fallback, because
   the Kinect can miss a fist.
 - **Drag** = **grip** on empty space, move hand, **release** (open hand) → orbit the camera.
+  While the fist is closed, **pushing it forward zooms in and pulling it back zooms out**
+  (Overview only). A wrist twist can't be used: the Kinect v1 sees the hand as one point.
   In Focus mode, a grip anywhere except the Back button spins the planet.
 - Only the **primary user's primary hand** controls the app (the raised hand, so the right
   hand works and left-handed classmates can use theirs). Ignore other people walking by.

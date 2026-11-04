@@ -124,7 +124,15 @@ namespace Solar_System.Interaction
             input.DragStarted += () => isDragging = true;
             input.DragMoved += OnDragMoved;
             input.DragEnded += () => isDragging = false;
-            input.Zoomed += OnZoomed;
+            input.Zoomed += steps =>
+            {
+                // A hand zooms only during a fist drag. A fist that just came back
+                // from a planet and is still closed must not zoom by surprise.
+                if (!input.UsesDwell || isDragging)
+                {
+                    OnZoomed(steps);
+                }
+            };
         }
 
         private bool CanHover()

@@ -109,8 +109,24 @@ namespace Solar_System.Config
         // ---- Kinect hand ----
         /// <summary>Size of the hand cursor on screen.</summary>
         public const double KinectCursorSize = 52;
-        /// <summary>How far the cursor moves compared to the hand. 1 = fully, lower = less sensitive.</summary>
-        public const double KinectPointerSensitivity = 0.8;
+        /// <summary>
+        /// How calm the cursor is in the middle of the screen. 1 = same speed everywhere, lower = calmer.
+        /// It always speeds up toward the edges, so the corners stay reachable.
+        /// </summary>
+        public const double KinectPointerSensitivity = 0.7;
+        /// <summary>
+        /// The part of the hand's area that covers the whole screen. Lower = the corners are
+        /// reached sooner, while the hand is still safely inside the area the Kinect can use.
+        /// </summary>
+        public const double KinectHandReach = 0.85;
+        /// <summary>How much zoom one metre of pushing or pulling the fist gives. Higher = stronger zoom.</summary>
+        public const double KinectZoomStepsPerMeter = 30;
+        /// <summary>Pushing or pulling less than this does nothing, so a shaking hand cannot zoom.</summary>
+        public const double KinectZoomDeadZoneMeters = 0.06;
+        /// <summary>How quickly the measured hand depth follows the hand. Lower = calmer but slower.</summary>
+        public const double KinectReachSmoothing = 0.3;
+        /// <summary>A hand that is gone for less than this does not lose the cursor.</summary>
+        public const double KinectHandLostSeconds = 0.6;
         /// <summary>How quickly the cursor catches up with the hand. Lower = calmer but slower.</summary>
         public const double KinectPointerSmoothing = 10;
         /// <summary>Hand drags are multiplied by this. Lower = more arm movement is needed.</summary>

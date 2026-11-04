@@ -37,6 +37,15 @@ namespace Solar_System.Input
         private Point targetPosition; // where the hand says the cursor should be
         private Point position;       // where the cursor is now: it smoothly chases the target
         private bool isGripping;
+        private double handMissingSeconds; // how long the hand has been gone
+
+        // Push and pull zoom. "Reach" is how far the hand is in front of the shoulders, in metres.
+        private Skeleton[] skeletons;
+        private int mainHandTrackingId;
+        private HandType mainHandType;
+        private bool hasReach;
+        private double smoothedReach;
+        private double zoomAnchor; // the reach the last zoom step ended at
 
         public KinectInput(KinectRegion region, FrameworkElement surface)
         {
@@ -52,7 +61,6 @@ namespace Solar_System.Input
             KinectRegion.SetIsGripTarget(surface, true);
             KinectRegion.SetIsPressTarget(surface, true);
 
-            KinectRegion.AddHandPointerMoveHandler(surface, OnHandMoved);
             KinectRegion.AddHandPointerGripHandler(surface, OnGrip);
             KinectRegion.AddHandPointerGripReleaseHandler(surface, OnGripRelease);
             KinectRegion.AddHandPointerPressHandler(surface, OnPress);
@@ -66,10 +74,10 @@ namespace Solar_System.Input
         public event Action<Point> Grabbed;
         public event Action<Vector> DragMoved;
         public event Action DragEnded;
+        public event Action<double> Zoomed;
 
-        // Only the mouse uses these two: a fist starts a drag with Grabbed, and a hand cannot zoom.
+        // Only the mouse uses this: a fist starts a drag with Grabbed.
         public event Action DragStarted { add { } remove { } }
-        public event Action<double> Zoomed { add { } remove { } }
 
         /// <summary>Holding a hand still is a reliable way to select, because the Kinect can miss a fist.</summary>
         public bool UsesDwell
@@ -134,7 +142,7 @@ namespace Solar_System.Input
             }
         }
 
-        /// <summary>Call once per frame: moves the cursor and notices when the hand or the person goes away.</summary>
+        /// <summary>Call once per frame: follows the hand and notices when the hand or the person goes away.</summary>
         public void Update(double seconds)
         {
             if (sensor == null)
@@ -143,17 +151,26 @@ namespace Solar_System.Input
             }
 
             bool somebodySeen = false;
-            bool handRaised = false;
+            HandPointer mainHand = null;
             foreach (HandPointer hand in region.HandPointers)
             {
                 somebodySeen = somebodySeen || hand.IsTracked;
-                handRaised = handRaised || (IsMainHand(hand) && hand.IsInteractive);
+
+                // Near the edge of its zone a hand stops being "interactive" but is still
+                // there, so "active" counts too. Otherwise the cursor dies at the corners.
+                if (IsMainHand(hand) && hand.IsTracked && (hand.IsActive || hand.IsInteractive))
+                {
+                    mainHand = hand;
+                }
             }
 
-            if (!handRaised && hasPosition)
+            if (mainHand != null)
             {
-                hasPosition = false;
-                Left?.Invoke();
+                FollowHand(mainHand);
+            }
+            else
+            {
+                NoticeMissingHand(seconds);
             }
 
             if (hasPosition)
@@ -161,7 +178,7 @@ namespace Solar_System.Input
                 MoveCursor(seconds);
             }
 
-            if (handRaised)
+            if (hasPosition)
             {
                 SetStatus(KinectState.Tracking, "Проследяване");
             }
@@ -180,16 +197,26 @@ namespace Solar_System.Input
             return hand.IsPrimaryUser && hand.IsPrimaryHandOfUser;
         }
 
-        private void OnHandMoved(object sender, HandPointerEventArgs e)
+        /// <summary>
+        /// We read the hand here on every frame, instead of waiting for the Toolkit's move
+        /// events, because those stop as soon as the hand is outside the window.
+        /// </summary>
+        private void FollowHand(HandPointer hand)
         {
-            HandPointer hand = e.HandPointer;
-            if (!IsMainHand(hand) || !hand.IsInteractive)
+            handMissingSeconds = 0;
+            mainHandTrackingId = hand.TrackingId;
+            mainHandType = hand.HandType;
+
+            double width = surface.ActualWidth;
+            double height = surface.ActualHeight;
+            if (width <= 0 || height <= 0)
             {
                 return;
             }
 
-            Point rawPosition = hand.GetPosition(surface);
-            targetPosition = ToCursorPosition(rawPosition);
+            Point handPosition = hand.GetPosition(surface);
+            targetPosition = new Point(ToCursorPosition(handPosition.X, width),
+                                       ToCursorPosition(handPosition.Y, height));
 
             if (!hasPosition)
             {
@@ -200,19 +227,46 @@ namespace Solar_System.Input
             // While pushing, the Toolkit pulls the cursor toward this point. Keep it right
             // under the hand, or the cursor would slide away to the middle of the window.
             KinectRegion.SetPressTargetPoint(surface,
-                new Point(rawPosition.X / surface.ActualWidth, rawPosition.Y / surface.ActualHeight));
-
-            e.Handled = true;
+                new Point(Clamp(handPosition.X / width, 0, 1), Clamp(handPosition.Y / height, 0, 1)));
         }
 
-        /// <summary>With a lower sensitivity, moving the hand away from the middle moves the cursor less.</summary>
-        private Point ToCursorPosition(Point handPosition)
+        /// <summary>A short dropout must not lose the cursor, so wait a moment first.</summary>
+        private void NoticeMissingHand(double seconds)
         {
-            var middle = new Point(surface.ActualWidth / 2, surface.ActualHeight / 2);
-            Point moved = middle + (handPosition - middle) * SimulationConfig.KinectPointerSensitivity;
+            if (!hasPosition)
+            {
+                return;
+            }
 
-            return new Point(Math.Max(0, Math.Min(surface.ActualWidth, moved.X)),
-                             Math.Max(0, Math.Min(surface.ActualHeight, moved.Y)));
+            handMissingSeconds += seconds;
+            if (handMissingSeconds >= SimulationConfig.KinectHandLostSeconds)
+            {
+                hasPosition = false;
+                Left?.Invoke();
+            }
+        }
+
+        /// <summary>
+        /// Turns a hand position into a cursor position, for one direction (left-right or up-down).
+        /// The cursor is calm in the middle and speeds up near the edges, so it reaches the edge
+        /// of the screen while the hand is still safely inside the area the Kinect can use.
+        /// </summary>
+        private static double ToCursorPosition(double handPosition, double screenSize)
+        {
+            // -1 is one edge, 0 the middle and 1 the other edge.
+            double fromMiddle = (handPosition / screenSize - 0.5) * 2;
+            double hand = Clamp(fromMiddle / SimulationConfig.KinectHandReach, -1, 1);
+
+            // A straight line plus a curve: together they always end exactly at 1.
+            double calm = SimulationConfig.KinectPointerSensitivity;
+            double cursor = calm * hand + (1 - calm) * hand * hand * hand;
+
+            return (cursor + 1) / 2 * screenSize;
+        }
+
+        private static double Clamp(double value, double min, double max)
+        {
+            return Math.Max(min, Math.Min(max, value));
         }
 
         /// <summary>
@@ -241,6 +295,7 @@ namespace Solar_System.Input
             }
 
             isGripping = true;
+            hasReach = false; // the zoom starts counting from where the fist closed
             e.HandPointer.Capture(surface); // keep getting moves until the hand opens
             Grabbed?.Invoke(position);
             e.Handled = true;
@@ -282,6 +337,91 @@ namespace Solar_System.Input
                 e.IsInGripInteraction = isGripping;
                 e.Handled = true;
             }
+        }
+
+        /// <summary>
+        /// The Toolkit's hand pointer has no depth, so the zoom reads it from the skeleton.
+        /// Only needed while a fist is closed.
+        /// </summary>
+        private void OnSkeletonFrame(object sender, SkeletonFrameReadyEventArgs e)
+        {
+            if (!isGripping)
+            {
+                return;
+            }
+
+            try
+            {
+                using (SkeletonFrame frame = e.OpenSkeletonFrame())
+                {
+                    if (frame == null)
+                    {
+                        return;
+                    }
+
+                    if (skeletons == null || skeletons.Length != frame.SkeletonArrayLength)
+                    {
+                        skeletons = new Skeleton[frame.SkeletonArrayLength];
+                    }
+                    frame.CopySkeletonDataTo(skeletons);
+                }
+
+                foreach (Skeleton skeleton in skeletons)
+                {
+                    if (skeleton.TrackingState == SkeletonTrackingState.Tracked
+                        && skeleton.TrackingId == mainHandTrackingId)
+                    {
+                        ReadReach(skeleton);
+                        return;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // For example: the sensor was unplugged in the middle of a frame.
+                AppLog.Error("Error while reading the hand depth", ex);
+            }
+        }
+
+        private void ReadReach(Skeleton skeleton)
+        {
+            Joint hand = skeleton.Joints[mainHandType == HandType.Left ? JointType.HandLeft : JointType.HandRight];
+            Joint shoulders = skeleton.Joints[JointType.ShoulderCenter];
+
+            // A joint the Kinect only guessed would make the zoom jump.
+            if (hand.TrackingState == JointTrackingState.Tracked
+                && shoulders.TrackingState == JointTrackingState.Tracked)
+            {
+                // Measured from the shoulders, so swaying or stepping does not zoom. Only the arm does.
+                ZoomFromReach(shoulders.Position.Z - hand.Position.Z);
+            }
+        }
+
+        /// <summary>
+        /// Pushing the fist forward zooms in, and pulling it back zooms out. The small dead
+        /// zone means a shaking hand does nothing, and changing direction needs a real movement.
+        /// </summary>
+        private void ZoomFromReach(double reach)
+        {
+            if (!hasReach)
+            {
+                hasReach = true;
+                smoothedReach = reach;
+                zoomAnchor = reach;
+                return;
+            }
+
+            smoothedReach += (reach - smoothedReach) * SimulationConfig.KinectReachSmoothing;
+
+            double moved = smoothedReach - zoomAnchor;
+            if (Math.Abs(moved) <= SimulationConfig.KinectZoomDeadZoneMeters)
+            {
+                return;
+            }
+
+            double zoomMeters = moved - Math.Sign(moved) * SimulationConfig.KinectZoomDeadZoneMeters;
+            zoomAnchor += zoomMeters;
+            Zoomed?.Invoke(zoomMeters * SimulationConfig.KinectZoomStepsPerMeter);
         }
 
         /// <summary>Called by the SDK when any Kinect is plugged in, unplugged, loses power, etc.</summary>
@@ -343,6 +483,7 @@ namespace Solar_System.Input
 
                 region.KinectSensor = candidate;
                 sensor = candidate;
+                sensor.SkeletonFrameReady += OnSkeletonFrame;
 
                 AppLog.Info("Kinect started");
                 SetStatus(KinectState.WaitingForUser, "Застанете пред камерата");
@@ -399,6 +540,7 @@ namespace Solar_System.Input
 
             try
             {
+                sensor.SkeletonFrameReady -= OnSkeletonFrame;
                 region.KinectSensor = null;
             }
             catch (Exception ex)

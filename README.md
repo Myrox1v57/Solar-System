@@ -32,6 +32,7 @@ Hold your open palm toward the camera.
 | Hold your hand still on a planet for 2 seconds | Same as the fist (a ring shows the progress) |
 | Push your hand forward on a planet | Same as the fist |
 | Fist on empty space and move your hand | Turns the camera around the Sun |
+| Fist on empty space and push forward / pull back | Zooms the whole solar system in / out |
 | Fist and move your hand while zoomed in | Spins the planet |
 | Hold your hand still on "Назад" or close a fist on it | Goes back to the overview |
 
