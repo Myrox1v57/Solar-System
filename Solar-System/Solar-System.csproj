@@ -3,42 +3,67 @@
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <Platform Condition=" '$(Platform)' == '' ">x64</Platform>
     <ProjectGuid>{B6F87005-D209-40E5-9F6B-FCD034034B5B}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <RootNamespace>Solar_System</RootNamespace>
     <AssemblyName>Solar-System</AssemblyName>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <WarningLevel>4</WarningLevel>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>true</Deterministic>
+    <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+
+  <!-- Only x64 builds: the Kinect interaction library (KinectInteraction180_64.dll) is 64-bit. -->
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
     <PlatformTarget>x64</PlatformTarget>
+    <Prefer32Bit>false</Prefer32Bit>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
+    <OutputPath>bin\x64\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
+    <PlatformTarget>x64</PlatformTarget>
+    <Prefer32Bit>false</Prefer32Bit>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
+    <OutputPath>bin\x64\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+
+  <!--
+    Where the Kinect SDK 1.8 and Developer Toolkit 1.8 are installed.
+    Their installers set the environment variables KINECTSDK10_DIR and KINECT_TOOLKIT_DIR.
+    If those are missing we fall back to the default install folders.
+  -->
+  <PropertyGroup>
+    <KinectSdkDir Condition=" '$(KINECTSDK10_DIR)' != '' ">$([MSBuild]::EnsureTrailingSlash('$(KINECTSDK10_DIR)'))</KinectSdkDir>
+    <KinectSdkDir Condition=" '$(KinectSdkDir)' == '' ">C:\Program Files\Microsoft SDKs\Kinect\v1.8\</KinectSdkDir>
+    <KinectToolkitDir Condition=" '$(KINECT_TOOLKIT_DIR)' != '' ">$([MSBuild]::EnsureTrailingSlash('$(KINECT_TOOLKIT_DIR)'))</KinectToolkitDir>
+    <KinectToolkitDir Condition=" '$(KinectToolkitDir)' == '' ">C:\Program Files\Microsoft SDKs\Kinect\Developer Toolkit v1.8.0\</KinectToolkitDir>
+  </PropertyGroup>
+
   <ItemGroup>
+    <!-- Kinect SDK 1.8 (sensor, depth and skeleton data). Copied next to the .exe. -->
     <Reference Include="Microsoft.Kinect, Version=1.8.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\..\..\..\Program Files\Microsoft SDKs\Kinect\v1.8\Assemblies\Microsoft.Kinect.dll</HintPath>
+      <HintPath>$(KinectSdkDir)Assemblies\Microsoft.Kinect.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <!-- Kinect Developer Toolkit 1.8: hand pointer, grip and press detection (used from Phase 4). -->
+    <Reference Include="Microsoft.Kinect.Toolkit.Interaction">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(KinectToolkitDir)Assemblies\Microsoft.Kinect.Toolkit.Interaction.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
@@ -55,6 +80,38 @@
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
   </ItemGroup>
+
+  <ItemGroup>
+    <!-- 3D helpers: spheres, lines, textures. 2.27.x is the newest line that supports .NET Framework 4.8. -->
+    <PackageReference Include="HelixToolkit.Wpf">
+      <Version>2.27.3</Version>
+    </PackageReference>
+  </ItemGroup>
+
+  <!--
+    Native (C++) part of the Kinect interaction library. It must sit next to the .exe.
+    The toolkit has used both "amd64" and "x64" as the folder name, so we look in both.
+  -->
+  <ItemGroup>
+    <None Include="$(KinectToolkitDir)Redist\amd64\KinectInteraction180_64.dll" Condition="Exists('$(KinectToolkitDir)Redist\amd64\KinectInteraction180_64.dll')">
+      <Link>KinectInteraction180_64.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Visible>False</Visible>
+    </None>
+    <None Include="$(KinectToolkitDir)Redist\x64\KinectInteraction180_64.dll" Condition="!Exists('$(KinectToolkitDir)Redist\amd64\KinectInteraction180_64.dll') And Exists('$(KinectToolkitDir)Redist\x64\KinectInteraction180_64.dll')">
+      <Link>KinectInteraction180_64.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Visible>False</Visible>
+    </None>
+  </ItemGroup>
+
+  <!-- Friendly build warnings if the Kinect files are not where we expect them. -->
+  <Target Name="CheckKinectFiles" BeforeTargets="BeforeBuild">
+    <Warning Condition="!Exists('$(KinectSdkDir)Assemblies\Microsoft.Kinect.dll')" Text="Kinect SDK 1.8 not found in '$(KinectSdkDir)'. Install 'Kinect for Windows SDK v1.8'." />
+    <Warning Condition="!Exists('$(KinectToolkitDir)Assemblies\Microsoft.Kinect.Toolkit.Interaction.dll')" Text="Microsoft.Kinect.Toolkit.Interaction.dll not found in '$(KinectToolkitDir)Assemblies\'. Install 'Kinect for Windows Developer Toolkit v1.8'." />
+    <Warning Condition="!Exists('$(KinectToolkitDir)Redist\amd64\KinectInteraction180_64.dll') And !Exists('$(KinectToolkitDir)Redist\x64\KinectInteraction180_64.dll')" Text="KinectInteraction180_64.dll not found in '$(KinectToolkitDir)Redist\'. Install 'Kinect for Windows Developer Toolkit v1.8'." />
+  </Target>
+
   <ItemGroup>
     <ApplicationDefinition Include="App.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -72,7 +129,22 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="AppLog.cs" />
+    <Compile Include="Input\KinectInput.cs" />
   </ItemGroup>
+
+  <!-- Folders that will be filled in later phases (see CLAUDE.md). -->
+  <ItemGroup>
+    <Folder Include="Camera\" />
+    <Folder Include="Config\" />
+    <Folder Include="Interaction\" />
+    <Folder Include="Model\" />
+    <Folder Include="Scene\" />
+    <Folder Include="Simulation\" />
+    <Folder Include="UI\" />
+    <Folder Include="Assets\Textures\" />
+  </ItemGroup>
+
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>

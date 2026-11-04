@@ -1,17 +1,34 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Data;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Windows;
+﻿using System.Windows;
+using System.Windows.Threading;
 
 namespace Solar_System
 {
     /// <summary>
-    /// Interaction logic for App.xaml
+    /// Application start-up.
     /// </summary>
     public partial class App : Application
     {
+        protected override void OnStartup(StartupEventArgs e)
+        {
+            AppLog.StartNewLog();
+            AppLog.Info("App starting");
+
+            // Last safety net: write unexpected errors to SolarSystem.log so we can find the cause.
+            DispatcherUnhandledException += OnUnhandledException;
+
+            base.OnStartup(e);
+        }
+
+        protected override void OnExit(ExitEventArgs e)
+        {
+            AppLog.Info("App closing");
+            base.OnExit(e);
+        }
+
+        private void OnUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
+        {
+            AppLog.Error("Unexpected error", e.Exception);
+            // e.Handled stays false: during development we want to see the crash in Visual Studio.
+        }
     }
 }

@@ -5,8 +5,19 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Solar_System"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="Kinect Solar System" Height="720" Width="1280"
+        WindowStartupLocation="CenterScreen"
+        Background="Black">
     <Grid>
-        
+        <!-- Phase 0: only a title and the Kinect status. The 3D scene comes in Phase 1. -->
+        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+            <TextBlock Text="Kinect Solar System"
+                       FontSize="64" FontWeight="Light" Foreground="White"
+                       HorizontalAlignment="Center" />
+            <TextBlock x:Name="KinectStatusText"
+                       Text="Looking for Kinect..."
+                       FontSize="40" Foreground="Orange"
+                       HorizontalAlignment="Center" Margin="0,32,0,0" />
+        </StackPanel>
     </Grid>
 </Window>
