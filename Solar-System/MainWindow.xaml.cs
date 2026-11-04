@@ -50,6 +50,11 @@ namespace Solar_System
             Loaded += OnLoaded;
             Closed += OnClosed;
             KeyDown += OnKeyDown;
+
+#if !DEBUG
+            // The Release build is the one for the presentation. Debug stays in a window for testing.
+            ToggleFullscreen();
+#endif
         }
 
         private void OnLoaded(object sender, RoutedEventArgs e)
