@@ -157,12 +157,12 @@
     <Compile Include="Scene\BodyVisual.cs" />
     <Compile Include="Scene\SceneBuilder.cs" />
     <Compile Include="Scene\TextureLoader.cs" />
+    <Compile Include="Simulation\SimulationClock.cs" />
   </ItemGroup>
 
   <!-- Folders that will be filled in later phases (see CLAUDE.md). -->
   <ItemGroup>
     <Folder Include="Interaction\" />
-    <Folder Include="Simulation\" />
     <Folder Include="UI\" />
   </ItemGroup>
 

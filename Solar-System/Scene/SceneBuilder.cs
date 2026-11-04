@@ -42,13 +42,11 @@ namespace Solar_System.Scene
             foreach (CelestialBody body in bodies)
             {
                 var visual = new BodyVisual(body, CreateSphere(body));
-
-                // Start position: the parent's position plus the place on the orbit.
                 if (body.Parent != null)
                 {
-                    visual.Position = visualOfBody[body.Parent].Position
-                                      + body.GetOrbitOffset(body.StartAngleDegrees);
+                    visual.ParentVisual = visualOfBody[body.Parent];
                 }
+                visual.UpdateMotion(0); // go to the start position
 
                 viewport.Children.Add(visual.Visual);
                 visuals.Add(visual);
@@ -195,7 +193,7 @@ namespace Solar_System.Scene
                 Material = material,
                 BackMaterial = material // visible from above and below
             };
-            return new ModelVisual3D { Content = model, Transform = saturn.CreateTransform() };
+            return new ModelVisual3D { Content = model, Transform = saturn.CreateTiltAndMoveTransform() };
         }
 
         /// <summary>

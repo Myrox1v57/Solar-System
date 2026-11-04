@@ -35,6 +35,12 @@ namespace Solar_System.Model
         /// <summary>How far the spin axis leans over, in degrees (real values).</summary>
         public double AxialTiltDegrees { get; set; }
 
+        /// <summary>Seconds on screen for one trip around the parent, at normal speed.</summary>
+        public double OrbitSeconds { get; set; }
+
+        /// <summary>Seconds on screen for one spin around its own axis, at normal speed.</summary>
+        public double SpinSeconds { get; set; }
+
         /// <summary>True for the Sun: it shines by itself instead of being lit.</summary>
         public bool IsSelfLit { get; set; }
 
